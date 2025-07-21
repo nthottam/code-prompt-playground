@@ -7,80 +7,40 @@ import { ProblemStatement } from "@/components/ProblemStatement";
 import { AIPromptInput } from "@/components/AIPromptInput";
 import { CodeBlock } from "@/components/CodeBlock";
 import { TestCases, TestCase } from "@/components/TestCases";
+import { ProblemSelector } from "@/components/ProblemSelector";
+import { SubmissionResults } from "@/components/SubmissionResults";
 import { useToast } from "@/hooks/use-toast";
+import { problems, Problem } from "@/data/problems";
 
-const sampleProblem = {
-  title: "Two Sum",
-  difficulty: "Easy" as const,
-  description: "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice.",
-  examples: [
-    {
-      input: "nums = [2,7,11,15], target = 9",
-      output: "[0,1]",
-      explanation: "Because nums[0] + nums[1] == 9, we return [0, 1]"
-    },
-    {
-      input: "nums = [3,2,4], target = 6",
-      output: "[1,2]"
-    }
-  ],
-  constraints: [
-    "2 <= nums.length <= 10^4",
-    "-10^9 <= nums[i] <= 10^9",
-    "-10^9 <= target <= 10^9",
-    "Only one valid answer exists"
-  ]
-};
-
-const initialTestCases: TestCase[] = [
-  {
-    id: 1,
-    input: "nums = [2,7,11,15], target = 9",
-    expectedOutput: "[0,1]",
-    status: 'pending'
-  },
-  {
-    id: 2,
-    input: "nums = [3,2,4], target = 6",
-    expectedOutput: "[1,2]",
-    status: 'pending'
-  },
-  {
-    id: 3,
-    input: "nums = [3,3], target = 6",
-    expectedOutput: "[0,1]",
-    status: 'pending'
-  }
-];
 
 const Index = () => {
+  const [currentProblem, setCurrentProblem] = useState<Problem>(problems[0]);
   const [generatedCode, setGeneratedCode] = useState("");
-  const [testCases, setTestCases] = useState<TestCase[]>(initialTestCases);
+  const [testCases, setTestCases] = useState<TestCase[]>(problems[0].testCases);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submissionData, setSubmissionData] = useState<any>(null);
   const { toast } = useToast();
+
+  const handleProblemChange = (problem: Problem) => {
+    setCurrentProblem(problem);
+    setTestCases(problem.testCases);
+    setGeneratedCode("");
+    setIsSubmitted(false);
+    setSubmissionData(null);
+    toast({
+      title: "Problem Changed",
+      description: `Switched to: ${problem.title}`,
+    });
+  };
 
   const handleGenerateCode = async (prompt: string) => {
     setIsGenerating(true);
     
     // Simulate AI code generation
     setTimeout(() => {
-      const sampleCode = `function twoSum(nums, target) {
-    const numMap = new Map();
-    
-    for (let i = 0; i < nums.length; i++) {
-        const complement = target - nums[i];
-        
-        if (numMap.has(complement)) {
-            return [numMap.get(complement), i];
-        }
-        
-        numMap.set(nums[i], i);
-    }
-    
-    return [];
-}`;
-      setGeneratedCode(sampleCode);
+      setGeneratedCode(currentProblem.solution.code);
       setIsGenerating(false);
       toast({
         title: "Code Generated!",
@@ -106,11 +66,11 @@ const Index = () => {
 
     // Simulate test execution
     setTimeout(() => {
-      const results: TestCase[] = [
-        { ...initialTestCases[0], status: 'passed', actualOutput: '[0,1]' },
-        { ...initialTestCases[1], status: 'passed', actualOutput: '[1,2]' },
-        { ...initialTestCases[2], status: 'passed', actualOutput: '[0,1]' }
-      ];
+      const results: TestCase[] = currentProblem.testCases.map((tc, index) => ({
+        ...tc,
+        status: 'passed' as const,
+        actualOutput: tc.expectedOutput
+      }));
       
       setTestCases(results);
       setIsRunning(false);
@@ -137,10 +97,33 @@ const Index = () => {
       return;
     }
 
+    // Generate mock submission data
+    const mockSubmissionData = {
+      allTestsPassed: true,
+      executionTime: Math.floor(Math.random() * 50) + 10, // 10-60ms
+      memoryUsage: Math.random() * 5 + 12, // 12-17MB
+      userComplexity: {
+        time: currentProblem.solution.timeComplexity,
+        space: currentProblem.solution.spaceComplexity
+      },
+      comparison: {
+        betterThan: Math.floor(Math.random() * 40) + 60, // 60-100%
+        rank: Math.random() > 0.5 ? "Top 25%" : "Top 50%"
+      }
+    };
+
+    setSubmissionData(mockSubmissionData);
+    setIsSubmitted(true);
+    
     toast({
       title: "Solution Submitted!",
-      description: "Your solution has been submitted for comparison with others.",
+      description: "Your solution has been analyzed. Check the results below.",
     });
+  };
+
+  const handleTryAnother = () => {
+    const nextProblemIndex = (problems.findIndex(p => p.id === currentProblem.id) + 1) % problems.length;
+    handleProblemChange(problems[nextProblemIndex]);
   };
 
   return (
@@ -202,16 +185,30 @@ const Index = () => {
 
       {/* Main Problem Interface */}
       <section className="container mx-auto px-4 pb-12">
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left Column - Problem Statement */}
-          <div className="space-y-6">
-            <ProblemStatement {...sampleProblem} />
-            
-            <AIPromptInput 
-              onSubmit={handleGenerateCode}
-              isLoading={isGenerating}
-            />
-          </div>
+        <div className="space-y-6">
+          {/* Problem Selector */}
+          <ProblemSelector
+            problems={problems}
+            currentProblem={currentProblem}
+            onProblemChange={handleProblemChange}
+          />
+
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Left Column - Problem Statement */}
+            <div className="space-y-6">
+              <ProblemStatement
+                title={currentProblem.title}
+                difficulty={currentProblem.difficulty}
+                description={currentProblem.description}
+                examples={currentProblem.examples}
+                constraints={currentProblem.constraints}
+              />
+              
+              <AIPromptInput 
+                onSubmit={handleGenerateCode}
+                isLoading={isGenerating}
+              />
+            </div>
 
           {/* Right Column - Code and Tests */}
           <div className="space-y-6">
@@ -251,6 +248,18 @@ const Index = () => {
 
             <TestCases testCases={testCases} />
           </div>
+        </div>
+        
+        {/* Submission Results */}
+        {isSubmitted && submissionData && (
+          <div className="mt-12">
+            <SubmissionResults
+              problem={currentProblem}
+              submissionData={submissionData}
+              onTryAnother={handleTryAnother}
+            />
+          </div>
+        )}
         </div>
       </section>
 
