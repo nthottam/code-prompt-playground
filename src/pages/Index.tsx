@@ -145,6 +145,9 @@ const Index = () => {
               <Star className="h-3 w-3" />
               Beta
             </Badge>
+            <Button variant="outline" size="sm" asChild>
+              <a href="/auth">Log in</a>
+            </Button>
             <Button variant="ghost" size="sm">
               <Github className="h-4 w-4 mr-2" />
               GitHub
