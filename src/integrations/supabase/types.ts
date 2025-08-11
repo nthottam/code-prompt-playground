@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      submissions: {
+        Row: {
+          ai_feedback: Json | null
+          ai_solution_code: string | null
+          all_tests_passed: boolean
+          correctness_score: number | null
+          created_at: string
+          id: string
+          memory_bytes: number | null
+          problem_id: string
+          runtime_ms: number | null
+          space_complexity: string | null
+          tests_passed: number | null
+          time_complexity: string | null
+          total_tests: number | null
+          updated_at: string
+          user_code: string
+          user_id: string
+        }
+        Insert: {
+          ai_feedback?: Json | null
+          ai_solution_code?: string | null
+          all_tests_passed?: boolean
+          correctness_score?: number | null
+          created_at?: string
+          id?: string
+          memory_bytes?: number | null
+          problem_id: string
+          runtime_ms?: number | null
+          space_complexity?: string | null
+          tests_passed?: number | null
+          time_complexity?: string | null
+          total_tests?: number | null
+          updated_at?: string
+          user_code: string
+          user_id: string
+        }
+        Update: {
+          ai_feedback?: Json | null
+          ai_solution_code?: string | null
+          all_tests_passed?: boolean
+          correctness_score?: number | null
+          created_at?: string
+          id?: string
+          memory_bytes?: number | null
+          problem_id?: string
+          runtime_ms?: number | null
+          space_complexity?: string | null
+          tests_passed?: number | null
+          time_complexity?: string | null
+          total_tests?: number | null
+          updated_at?: string
+          user_code?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
